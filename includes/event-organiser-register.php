@@ -275,6 +275,8 @@ function eventorganiser_add_admin_scripts( $hook ) {
 					),
 					'is24hour' => eo_blog_is_24(),
 					'location' => get_option( 'timezone_string' ),
+					// create nonce
+					'search_venue_nonce' => wp_create_nonce( 'eo-search-venue-nonce' ),
 					'locale'   => array(
 						'isUsingOrdinal' => eo_blog_is_using_ordinal(),
 						'isrtl'       => $wp_locale->is_rtl(),

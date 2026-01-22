@@ -1,13 +1,13 @@
 var eventorganiser = eventorganiser || {};
 /**
  * Simply compares two string version values.
- * 
+ *
  * Example:
  * versionCompare('1.1', '1.2') => -1
  * versionCompare('1.1', '1.1') =>  0
  * versionCompare('1.2', '1.1') =>  1
  * versionCompare('2.23.3', '2.22.3') => 1
- * 
+ *
  * Returns:
  * -1 = left is LOWER than right
  *  0 = they are equal
@@ -24,9 +24,9 @@ var eventorganiser = eventorganiser || {};
 eventorganiser.versionCompare = function(left, right) {
     if (typeof left + typeof right != 'stringstring')
         return false;
-    
+
     var a = left.split('.'), b = right.split('.'), i = 0, len = Math.max(a.length, b.length);
-        
+
     for (; i < len; i++) {
         if ((a[i] && !b[i] && parseInt(a[i],10) > 0) || (parseInt(a[i],10) > parseInt(b[i],10))) {
             return 1;
@@ -34,7 +34,7 @@ eventorganiser.versionCompare = function(left, right) {
             return -1;
         }
     }
-    
+
     return 0;
 };
 
@@ -42,10 +42,10 @@ eventorganiser.versionCompare = function(left, right) {
 (function ($) {
 
     $(document).ready(function () {
-	
+
 	/* Calendar Dialogs */
 	$('#eo-dialog-tabs').tabs();
-	$('.eo-dialog').dialog({ 
+	$('.eo-dialog').dialog({
 		autoOpen: false,
 		dialogClass: 'eo-admin-calendar-dialog',
 		width: 527,
@@ -62,7 +62,7 @@ eventorganiser.versionCompare = function(left, right) {
 
 	/* Time Format from screen option */
 	var format = ($('#eofc_time_format').is(":checked") ? 'HH:mm' : 'h:mma');
-    
+
 	/* Calendar */
 	var calendar = jQuery('#eo_admin_calendar').fullCalendar({
 		firstDay: parseInt(EO_Ajax.startday,10),
@@ -75,13 +75,13 @@ eventorganiser.versionCompare = function(left, right) {
 		snapDuration:'00:05:00',
 		slotDuration:'00:15:00',
 		eventDrop: function( event, dayDelta, revertFunc, jsEvent, ui, view ) {
-			
+
 			if ( ! event.end ) {
 				alert( 'Changing the event duration is not supported' );
 				revertFunc();
 				return;
 			}
-			
+
             $.ajax({
             	type: "POST",
             	url: EO_Ajax.ajaxurl,
@@ -92,8 +92,8 @@ eventorganiser.versionCompare = function(left, right) {
             		event_id: event.event_id,
             		occurrence_id: event.occurrence_id,
             		_wpnonce: EO_Ajax.edit_nonce,
-            	}, 
-            	dataType: 'json' 
+            	},
+            	dataType: 'json'
             })
             .done( function( response ){
             	if( response.success !== true ){
@@ -103,7 +103,7 @@ eventorganiser.versionCompare = function(left, right) {
             })
             .fail( function( jqXHR, textStatus, errorMessage ) {
             	alert( 'Error: ' + errorMessage );
-            	revertFunc();		
+            	revertFunc();
             });
 		},
 		lazyFetching: 'true',
@@ -165,7 +165,7 @@ eventorganiser.versionCompare = function(left, right) {
 			var date = view.intervalStart.format( 'YYYY-MM-DD' );
 			//Expire cooke after 10 minutes
 			var expires_date = new Date();
-			expires_date = new Date(expires_date.getTime() + (10 * 60 * 1000));			
+			expires_date = new Date(expires_date.getTime() + (10 * 60 * 1000));
 			$.cookie('eo_admin_cal_last_viewed_date', date,{ expires: expires_date });
 			$.cookie('eo_admin_cal_last_view', view.name,{ expires: expires_date });
 		},
@@ -188,10 +188,10 @@ eventorganiser.versionCompare = function(left, right) {
 			if ( EO_Ajax.perm_edit ){
 				jsEvent.preventDefault();
 				var options = jQuery(this)[0].calendar.options;
-				
+
 				var start_date = startDate.format( 'YYYY-MM-DD' );
 				var start_time = startDate.format( 'HH:mm' );
-				
+
 				if ( !startDate.hasTime() ) {
 					endDate.subtract(1, 'minute');
 					format = 'ddd, Do MMMM';
@@ -200,12 +200,12 @@ eventorganiser.versionCompare = function(left, right) {
 					format = 'ddd, Do MMMM h:mma';
 					allDay = 0;
 				}
-				
+
 				var end_date   = endDate.format( 'YYYY-MM-DD' );
 				var end_time   = endDate.format( 'HH:mm' );
 
 				var the_date = $.fullCalendar.formatRange( startDate, endDate, format );
-						
+
 				$("#eo_event_create_cal input[name='eo_event[event_title]']").val('');
 				$("#eo_event_create_cal input.ui-autocomplete-input").val('');
 				$("#eo_event_create_cal textarea[name='eo_event[event_content]']").val('');
@@ -225,12 +225,14 @@ eventorganiser.versionCompare = function(left, right) {
 	});
 
 	/* Update time format screen option */
+	// Add nonce
 	$('#eofc_time_format').on('change', function () {
 		format = ($('#eofc_time_format').is(":checked") ? 'HH:mm' : 'h:mmtt');
 		calendar.fullCalendar('option', 'timeFormat', format);
 		$.post(ajaxurl, {
 			action: 'eofc-format-time',
-			is24: $('#eofc_time_format').is(":checked")
+			is24: $('#eofc_time_format').is(":checked"),
+			nonce: EO_Ajax.time_format_nonce
 		});
 	});
 
@@ -245,27 +247,27 @@ eventorganiser.versionCompare = function(left, right) {
 		var element = $("<span class='fc-header-goto'><input type='hidden' id='miniCalendar'/></span>");
 		return element;
 	}
-	
+
 	function eventorganiser_switch_calendar_to( mode ){
 		$('.view-button').removeClass('nav-tab-active');
 		calendar.fullCalendar( 'changeView', mode );
 		$('#'+mode).addClass('nav-tab-active');
 	}
-	
+
 	//Keybard shortcuts
 	$(window).on( 'keypress', function( e ){
-		
+
 		if ( $(e.target).closest('.ui-dialog').length > 0 ) {
 			return;
 		}
-		
+
 		switch( e.which ) {
 			case 49://1
 			case 109://m
 			case 77://M
 				eventorganiser_switch_calendar_to( 'month' );
 				break;
-				
+
 			case 50://W
 			case 119://w
 			case 87://W
@@ -284,7 +286,7 @@ eventorganiser.versionCompare = function(left, right) {
 			case 71://G
 				//$('#miniCalendar').datepicker("show").focus();
 				break;
-				
+
 			case 110://n
 			case 78://N
 			case 106://j
@@ -297,18 +299,18 @@ eventorganiser.versionCompare = function(left, right) {
 			case 80://P
 				calendar.fullCalendar( 'prev' );
 				break;
-				
+
 			case 63://?
 				//open keyboard shortcuts
 				$('#eo-keyboard-shortcuts').dialog('open');
 				break;
 			default:
 				return;
-				 
+
 		}
 		e.preventDefault();
 	} );
-	
+
 	$('#eo-keyboard-shortcuts').dialog({
 		autoOpen: false,
 		dialogClass: 'eo-admin-calendar-dialog',
@@ -320,12 +322,12 @@ eventorganiser.versionCompare = function(left, right) {
 			$(this).parent('.eo-admin-calendar-dialog').focus();
 		}
 	});
-	
+
 	$('#eo-keyboard-sr-shortcut').on( 'click', function( ev ){
 		ev.preventDefault();
 		$('#eo-keyboard-shortcuts').dialog('open');
 	});
-	
+
 	//Hack to move screen reader shortcut to where WordPress' SR shortcuts live (if we can)
 	var sr_shortcuts = $('#adminmenumain .screen-reader-shortcut');
 	if ( sr_shortcuts.length > 0 ) { $('#eo-keyboard-sr-shortcut').insertAfter( sr_shortcuts.last() ); }
@@ -344,7 +346,7 @@ eventorganiser.versionCompare = function(left, right) {
 		}
 	});
 	$('button.ui-datepicker-trigger').button().addClass('fc-button').addClass('fc-state-default');
-        
+
     /* Venue drop-down in modal */
 	$.widget("ui.combobox", {
 		_create: function () {
@@ -357,7 +359,11 @@ eventorganiser.versionCompare = function(left, right) {
 				minLength: 0,
 				source: function (a, callback) {
 					input.addClass( 'eo-waiting' );
-					$.getJSON(EO_Ajax.ajaxurl + "?action=eo-search-venue", a, function (a) {
+					// add nonce
+    				var requestData = $.extend({}, a, {
+        				_ajax_nonce: EO_Ajax.search_venue_nonce
+    				});
+					$.getJSON(EO_Ajax.ajaxurl + "?action=eo-search-venue", requestData, function (a) {
 						var venues = $.map(a, function (a) {a.label = a.name;return a;});
 						callback(venues);
 						input.removeClass( 'eo-waiting' );
@@ -369,7 +375,7 @@ eventorganiser.versionCompare = function(left, right) {
 			};
 			input.autocomplete(options).addClass("ui-widget-content ui-corner-left");
 			this.element.replaceWith( $hiddenEl );
-			
+
 			/* Backwards compat with WP 3.3-3.5 (UI 1.8.16-1.9.2)*/
 			var jquery_ui_version = $.ui ? $.ui.version || 0 : -1;
 			var ac_namespace = ( eventorganiser.versionCompare( jquery_ui_version, '1.10' ) >= 0 ? 'ui-autocomplete' : 'autocomplete' );
@@ -416,13 +422,13 @@ eventorganiser.versionCompare = function(left, right) {
 	});
 	$("#venue_select").combobox();
 
-    
+
 
 	/* Venue & Category Filters */
 	function eventorganiser_cat_dropdown(options){
 
 		var terms = options.categories;
-		
+
 		if( !terms ){
 			return;
 		}
@@ -440,7 +446,7 @@ eventorganiser.versionCompare = function(left, right) {
 	function eventorganiser_venue_dropdown(options){
 
 		var venues = options.venues;
-		
+
 		if( !venues ){
 			return;
 		}
@@ -503,15 +509,15 @@ $.widget("ui.selectmenu", {
 
 	_create: function() {
 		var self = this, o = this.options;
-		
+
 		// make / set unique id
 		/* Backwards compat with WP 3.3-3.4 (jQuery UI 1.8.16-1.8.2)*/
 		var jquery_ui_version = $.ui ? $.ui.version || 0 : -1;
 		var selectmenuId = ( eventorganiser.versionCompare( jquery_ui_version, '1.9' ) >= 0 ) ? this.element.uniqueId().attr( "id" ) : this.element.attr( 'id' ) || 'ui-selectmenu-' + Math.random().toString( 16 ).slice( 2, 10 );
-		
+
 		// quick array of button and menu id's
 		this.ids = [ selectmenuId, selectmenuId + '-button', selectmenuId + '-menu' ];
-		
+
 		// define safe mouseup for future toggling
 		this._safemouseup = true;
 		this.isOpen = false;
@@ -1129,7 +1135,7 @@ $.widget("ui.selectmenu", {
 
 			if ( this._optionLis.eq( newIndex ).hasClass( 'ui-state-disabled' ) ) {
 				// if option at newIndex is disabled, call _moveFocus, incrementing amt by one
-				if( amt > 0 ){ 
+				if( amt > 0 ){
 					++amt;
 				}else{
 					--amt;
@@ -1168,7 +1174,7 @@ $.widget("ui.selectmenu", {
 
 		if ( this._optionLis.eq( newIndex ).hasClass( 'ui-state-disabled' ) ) {
 			// if option at newIndex is disabled, call _moveFocus, incrementing amt by one
-			if( amt > 0 ){ 
+			if( amt > 0 ){
 				++amt;
 			}else{
 				--amt;

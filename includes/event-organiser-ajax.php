@@ -706,6 +706,20 @@ function eventorganiser_widget_agenda() {
 */
 function eventorganiser_search_venues() {
 
+	// Add capability check - us EO Cap manage_venues
+  if ( ! current_user_can( 'edit_events' ) ) {
+    wp_send_json_error( array(
+      'message' => __( 'You do not have permission to search venues.', 'eventorganiser' )
+    ));
+  }
+
+  // Add nonce verification
+  if ( ! check_ajax_referer( 'eo-search-venue-nonce', false, false ) ) {
+    wp_send_json_error( array(
+      'message' => __( 'Security check failed.', 'eventorganiser' )
+    ));
+  }
+
 	// Query the venues with the given term
 	$value  = stripslashes( trim( $_GET['term'] ) );
 	$limit  = empty( $value ) ? null : 10;
@@ -742,10 +756,24 @@ function eventorganiser_search_venues() {
  *@ignore
 */
 function eventorganiser_admin_cal_time_format(){
+	// Add nonce verification
+  if ( ! check_ajax_referer( 'eo-cal-time-format-nonce', false, false ) ) {
+    wp_send_json_error( array(
+      'message' => __( 'Security check failed.', 'eventorganiser' )
+    ));
+  }
+
+  // Verify user is logged in (basic check)
+  if ( ! is_user_logged_in() ) {
+    wp_send_json_error( array(
+      'message' => __( 'You must be logged in.', 'eventorganiser' )
+    ));
+  }
+
 	$is24 = (  $_POST['is24'] == 'false' ? 1: 0 );
 	$user =wp_get_current_user();
 	$is12hour = update_user_meta($user->ID,'eofc_time_format',$is24);
-	exit();
+	wp_send_json_success();
 }
 
 /**
