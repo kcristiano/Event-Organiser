@@ -2,8 +2,8 @@
 Contributors: stephenharris
 Donate link: http://www.wp-event-organiser.com/donate
 Tags: events, event, event categories, event organizer, events calendar, event management, ical, locations, google map, OpenStreetMap, widget, venues, maps, gigs, shows,
-Requires at least: 3.8.0
-Tested up to: 6.6.2
+Requires at least: 6.3
+Tested up to: 6.8.3
 Stable tag: {{version}}
 License: GPLv3
 
@@ -222,6 +222,8 @@ More information on shortcodes is [available here](http://wp-event-organiser.com
 
 == Changelog ==
 
+= 3.12.8.1 - 16th January 2026
+* Security: Validate user capabilities and add nonces for location search and Calendar Time formay
 
 = 3.12.8 - 26th August 2024
 * Bugfix: Fixes interoperability with Real Consent banner
@@ -300,7 +302,7 @@ More information on shortcodes is [available here](http://wp-event-organiser.com
 = 3.10.0 - 22nd July 2020 =
 * feature: Extended support for RECURRENCE-ID in iCal calendards
 * bugfix: Ensure translated screen help text is escaped
-* bugfix: Replace instances of curly braces for array access (deprecated PHP 7). 
+* bugfix: Replace instances of curly braces for array access (deprecated PHP 7).
 
 = 3.9.1 - 28th May 2020 =
 * bugfix: Fixed bug where venue can't be changed if maps are disabled
@@ -338,7 +340,7 @@ More information on shortcodes is [available here](http://wp-event-organiser.com
 
 = 3.7.6 - 6th March 2019 =
 * bugfix: Fixed missing translations
-* bugfix: Fix tags and categories not appearing in Gutenberg 
+* bugfix: Fix tags and categories not appearing in Gutenberg
 
 = 3.7.5 - 1st March 2019 =
 * feature: Added eventorganiser_pre_insert_venue filter

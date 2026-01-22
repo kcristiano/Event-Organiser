@@ -28,39 +28,41 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 	 * Enqueues the page's scripts and styles, and localises them.
 	 */
 	function page_scripts(){
-		
+
 		global $wp_locale;
-		
+
 		wp_enqueue_script( 'eo_calendar' );
 
-		wp_localize_script( 'eo_event', 'EO_Ajax_Event', array( 
+		wp_localize_script( 'eo_event', 'EO_Ajax_Event', array(
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
 			'startday' => intval( get_option( 'start_of_week' ) ),
 			'format'   => eo_php2jquerydate( eventorganiser_get_option( 'dateformat' ) ),
 		));
-		
+
 		$edittime = ( defined( 'EVENT_ORGANISER_BETA_FEATURES' ) && EVENT_ORGANISER_BETA_FEATURES );
-		
+
 		$venues = $categories = $all_cats = $all_venues = false;
-		
+
 		if( $category_tax = get_taxonomy( 'event-category' ) ){
 			$categories = get_terms( 'event-category', array( 'hide_empty' => 0 ) );
 			$all_cats   = $category_tax->labels->view_all_items;
 		}
-		
+
 		if( $venue_tax = get_taxonomy( 'event-venue' ) ){
 			$venues     = get_terms( 'event-venue', array( 'hide_empty' => 0 ) );
 			$all_venues = $venue_tax->labels->view_all_items;
 		}
-		
+
 		wp_localize_script( 'eo_calendar', 'EO_Ajax', array(
 			'ajaxurl'    => admin_url( 'admin-ajax.php' ),
 			'startday'   => intval( get_option( 'start_of_week' ) ),
-			'format'     => eo_php_to_moment( eventorganiser_get_option( 'dateformat' ) ),			
+			'format'     => eo_php_to_moment( eventorganiser_get_option( 'dateformat' ) ),
 			'timeFormat' => ( get_current_screen()->get_option( 'eofc_time_format', 'value' ) ? 'h:mmtt' : 'HH:mm' ),
 			'perm_edit'  => current_user_can( 'edit_events' ),
 			'edit_time'  => $edittime ? current_user_can( 'edit_events' ) : false,
 			'edit_nonce' => wp_create_nonce( 'edit_events' ),
+			// add nonce
+			'time_format_nonce' => wp_create_nonce( 'eo-cal-time-format-nonce' ),
 			'categories' => $categories,
 			'venues'     => $venues,
 			'locale'     => array(
@@ -78,7 +80,7 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 				'venue'       => $all_venues,
 			)
 		));
-		
+
 	}
 
 	/**
@@ -89,13 +91,13 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 		if ( $terms = get_terms( 'event-category', array( 'hide_empty' => 0 ) ) ):
 			foreach ( $terms as $term ):
 				$slug = sanitize_html_class( $term->slug );
-				$color = esc_attr( eo_get_category_color( $term ) ); 
-				$css .= ".cat-slug-{$slug} span.ui-selectmenu-item-icon{ background: {$color}; }\n"; 
+				$color = esc_attr( eo_get_category_color( $term ) );
+				$css .= ".cat-slug-{$slug} span.ui-selectmenu-item-icon{ background: {$color}; }\n";
 			endforeach;
 		endif;
-		
+
 		wp_enqueue_style( 'eo_calendar-style' );
-		wp_enqueue_style( 'eventorganiser-style' );		
+		wp_enqueue_style( 'eventorganiser-style' );
 		wp_add_inline_style( 'eo_calendar-style', $css );
 	}
 
@@ -124,7 +126,7 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 			if ( ! current_user_can( 'edit_events' ) ) {
 				wp_die( __( 'You do not have sufficient permissions to create events. ', 'eventorganiser' ) );
 			}
-				
+
 			$input = $_POST['eo_event']; //Retrieve input from posted data
 
 			//Set the status of the new event
@@ -163,7 +165,7 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 					$redirect = add_query_arg( 'message', 6, $redirect );
 				else
 					$redirect = add_query_arg( 'message', 7, $redirect );
-				
+
 				//Redirect to event admin page & exit
 				wp_redirect( esc_url_raw( $redirect ) );
 				exit;
@@ -179,9 +181,9 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 				//Check permissions
 				if ( !current_user_can( 'edit_event', $post_id ) || !current_user_can( 'delete_event', $post_id ) )
 					wp_die( __( 'You do not have sufficient permissions to edit this event. ', 'eventorganiser' ) );
-		
+
 				$new_event_id = eo_break_occurrence( $post_id, $event_id );
-				
+
 				//Redirect to prevent resubmisson
 				$redirect = get_edit_post_link( $new_event_id, '' );
 				$redirect = add_query_arg( 'message', 20, $redirect );
@@ -202,11 +204,11 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 
 				//Break Cache!
 				_eventorganiser_delete_calendar_cache();
-				
+
 				if ( is_wp_error( $response ) ){
 					$EO_Errors = $response;
 				} else {
-					
+
 
 					if ( ! eo_get_the_occurrences_of( $post_id ) ) {
 						wp_delete_post( $post_id, true );
@@ -244,23 +246,23 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 		$venues = eo_get_venues( array( 'eo_update_venue_cache' => false ) );
 	?>
 
-	<div class="wrap">  
+	<div class="wrap">
 
 		<h2><?php _e( 'Events Calendar', 'eventorganiser' ); ?></h2>
 
-		<?php 
-			$current = !empty( $_COOKIE['eo_admin_cal_last_view'] ) ? $_COOKIE['eo_admin_cal_last_view'] : 'month'; 
+		<?php
+			$current = !empty( $_COOKIE['eo_admin_cal_last_view'] ) ? $_COOKIE['eo_admin_cal_last_view'] : 'month';
 			$views   = array( 'agendaDay' => __( 'Day', 'eventorganiser' ), 'agendaWeek' => __( 'Week', 'eventorganiser' ), 'month' => __( 'Month', 'eventorganiser' ) );
 		?>
 		<div id="calendar-view">
 			<span id='loading' style='display:none'><?php _e( 'Loading&#8230;', 'eventorganiser' );?></span>
 			<ul class="tablist" role="tablist">
-			<?php foreach( $views as $id => $label ) 
+			<?php foreach( $views as $id => $label )
 				printf( '<li role="tab"><a href="#" role="tab" class="nav-tab view-button %s" id="%s">%s</a></li>', ( $id == $current ? 'nav-tab-active' : '' ), $id, $label );
 			?>
 			</ul>
 		</div>
-		
+
 		<div id='eo_admin_calendar'></div>
 		<span><?php _e( 'Current date/time', 'eventorganiser' );?>: <?php echo $now->format( 'Y-m-d G:i:s \G\M\TP' );?></span>
 
@@ -279,13 +281,13 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 					<th><?php _e( 'Event Title', 'eventorganiser' );?>: </th>
 					<td><input name="eo_event[event_title]" class="eo-event-title ui-autocomplete-input ui-widget-content ui-corner-all" ></td>
 				</tr>
-				
-				<?php 
+
+				<?php
 					if( taxonomy_exists( 'event-venue' ) ):?>
 						<tr>
 							<th><?php _e( 'Where', 'eventorganiser' );?>: </th>
 							<td><!-- If javascript is disabed, a simple drop down menu box is displayed to choose venue.
-									Otherwise, the user is able to search the venues by typing in the input box.-->		
+									Otherwise, the user is able to search the venues by typing in the input box.-->
 								<select size="30" id="venue_select" name="eo_event[venue_id]">
 									<option>Select a venue </option>
 									<?php foreach ( $venues as $venue ):?>
@@ -321,17 +323,17 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 					<input type="submit" accesskey="p" tabindex="5" value="<?php _e( 'Submit for Review', 'eventorganiser' );?>" class="eo_alignright button-primary" id="submit-for-review" name="publish">
 				</span>
 			<?php }; ?>
-			
+
 			<br class="clear">
 			</form>
 		</div>
 		<?php endif; ?>
-		
+
 		<div id='eo-keyboard-shortcuts' style="display:none;" class="eo-dialog">
-		
-			<p> <?php esc_html_e( 'The following keyboard shortcuts are available', 'eventorganiser' ); ?> 
+
+			<p> <?php esc_html_e( 'The following keyboard shortcuts are available', 'eventorganiser' ); ?>
 			<br />
-			
+
 			<span class="eo-sc-key"><kbd>j</kbd> or <kbd>n</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Navigate to next period', 'eventorganiser' );?></span>
 			<br />
@@ -343,7 +345,7 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 			<span class="eo-sc-key"><kbd>1</kbd> or <kbd>m</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Switch to month view', 'eventorganiser' );?></span>
 			<br />
-						
+
 			<span class="eo-sc-key"><kbd>2</kbd> or <kbd>w</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Switch to week view', 'eventorganiser' );?></span>
 			<br />
@@ -351,7 +353,7 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 			<span class="eo-sc-key"><kbd>3</kbd> or <kbd>d</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Switch to day view', 'eventorganiser' );?></span>
 			<br />
-					
+
 			<span class="eo-sc-key"><kbd>t</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Jump to today in view', 'eventorganiser' );?></span>
 			<br />
@@ -359,18 +361,18 @@ class EventOrganiser_Calendar_Page extends EventOrganiser_Admin_Page
 			<span class="eo-sc-key"><kbd>enter</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Open modal of selected event', 'eventorganiser' );?></span>
 			<br />
-					
+
 			<span class="eo-sc-key"><kbd>esc</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Close modal', 'eventorganiser' );?></span>
 			<br />
-			
+
 			<span class="eo-sc-key"><kbd>?</kbd></span>
 			<span class="eo-sc-desc"><?php esc_html_e( 'Open shortcut help', 'eventorganiser' );?></span>
 			<br />
-			
+
 			</p>
 		</div>
-		
+
 	</div><!-- .wrap -->
 <?php
 	}
@@ -385,7 +387,7 @@ function eventorganiser_event_detail_dialog(){
 	 * @ignore
 	 */
 	$tabs = apply_filters( 'eventorganiser_calendar_dialog_tabs', array( 'summary' => __( 'Event Details', 'eventorganiser' ) ) );
-	
+
 	printf( "<div id='events-meta' class='eo-dialog' style='display:none;' title='%s'>", esc_attr__( 'Event Detail', 'eventorganiser' ) );
 		echo "<div id='eo-dialog-tabs'>";
 			echo "<ul style='position: relative;'>";

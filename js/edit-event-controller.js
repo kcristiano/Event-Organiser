@@ -106,7 +106,8 @@ $.widget("ui.combobox", {
 		minLength: 0,
 		source: function (a, callback) {
 			input.addClass( 'eo-waiting' );
-			$.getJSON(EO_Ajax_Event.ajaxurl + "?action=eo-search-venue", a, function (a) {
+			var requestData = $.extend({}, a, { _ajax_nonce: EO_Ajax_Event.search_venue_nonce });
+			$.getJSON(EO_Ajax_Event.ajaxurl + "?action=eo-search-venue", requestData, function (a) {
 				var venues = $.map(a, function (a) {a.label = a.name;return a;});
 				callback(venues);
 				input.removeClass( 'eo-waiting' );
@@ -228,7 +229,7 @@ $(".eo_addressInput").on('change', function () {
 			var key = $(this).attr('id').replace('eo_venue_add-','');
 			address[key] = $(this).val();
 	});
-	
+
 	if (!eovenue.is_map_enabled()) {
 		return;
 	}
